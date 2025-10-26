@@ -5,11 +5,11 @@ import { hideBin } from 'yargs/helpers';
 import { JournalManager } from './journal';
 import { SearchService } from './search';
 import { AixConfig } from './config';
-import { KnowledgeGraphService } from './knowledgeGraph';
+import { KnowledgeGraph } from './knowledgeGraph';
 
 export async function runCli(config: AixConfig) {
-  const knowledgeGraphService = new KnowledgeGraphService();
-  const journalManager = new JournalManager(config, knowledgeGraphService);
+  const knowledgeGraph = new KnowledgeGraph();
+  const journalManager = new JournalManager(config, knowledgeGraph);
   const searchService = new SearchService(config);
 
   yargs(hideBin(process.argv))

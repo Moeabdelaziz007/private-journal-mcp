@@ -9,7 +9,7 @@ import { EmbeddingService } from '../src/embeddings';
 import { SearchService } from '../src/search';
 import { JournalManager } from '../src/journal';
 import { AixConfig } from '../src/config';
-import { KnowledgeGraphService } from '../src/knowledgeGraph';
+import { KnowledgeGraph } from '../src/knowledgeGraph';
 
 // Mock config for testing
 const mockConfig: AixConfig = {
@@ -36,14 +36,14 @@ describe('Embedding and Search functionality', () => {
   let userTempDir: string;
   let journalManager: JournalManager;
   let searchService: SearchService;
-  let knowledgeGraphService: KnowledgeGraphService;
+  let knowledgeGraphService: KnowledgeGraph;
 
   beforeEach(async () => {
     projectTempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'journal-project-test-'));
     userTempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'journal-user-test-'));
     
     const config = { ...mockConfig, settings: { project_journal_path: projectTempDir, user_journal_path: path.join(userTempDir, '.private-journal') } };
-    knowledgeGraphService = new KnowledgeGraphService();
+    knowledgeGraphService = new KnowledgeGraph();
     journalManager = new JournalManager(config, knowledgeGraphService, userTempDir);
     searchService = new SearchService(config, userTempDir);
   });

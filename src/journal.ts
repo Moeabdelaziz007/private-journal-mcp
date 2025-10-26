@@ -7,15 +7,15 @@ import { JournalEntry } from './types';
 import { resolveUserJournalPath, resolveProjectJournalPath } from './paths';
 import { EmbeddingService, EmbeddingData } from './embeddings';
 import { AixConfig } from './config';
-import { KnowledgeGraphService } from './knowledgeGraph';
+import { KnowledgeGraph } from './knowledgeGraph';
 
 export class JournalManager {
   private projectJournalPath: string;
   private userJournalPath: string;
   private embeddingService: EmbeddingService;
-  private knowledgeGraphService: KnowledgeGraphService;
+  private knowledgeGraphService: KnowledgeGraph;
 
-  constructor(config: AixConfig, knowledgeGraphService: KnowledgeGraphService, homedirOverride?: string) {
+  constructor(config: AixConfig, knowledgeGraphService: KnowledgeGraph, homedirOverride?: string) {
     this.projectJournalPath = resolveProjectJournalPath(config);
     this.userJournalPath = resolveUserJournalPath(config, homedirOverride);
     this.embeddingService = EmbeddingService.getInstance();
@@ -40,7 +40,7 @@ export class JournalManager {
     await this.generateEmbeddingForEntry(filePath, formattedEntry, timestamp);
 
     // Analyze and update knowledge graph
-    this.knowledgeGraphService.analyzeEntry(content);
+    this.knowledgeGraphService.buildFromEntries([{ body: content }]);
   }
 
   async writeThoughts(thoughts: {
@@ -139,7 +139,7 @@ ${content}
 
     // Analyze and update knowledge graph
     const content = Object.values(thoughts).filter(Boolean).join('\n\n');
-    this.knowledgeGraphService.analyzeEntry(content);
+    this.knowledgeGraphService.buildFromEntries([{ body: content }]);
   }
 
   private formatThoughts(thoughts: {

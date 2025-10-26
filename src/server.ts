@@ -11,14 +11,14 @@ import { JournalManager } from './journal';
 import { ProcessFeelingsRequest, ProcessThoughtsRequest } from './types';
 import { SearchService } from './search';
 import { AixConfig } from './config';
-import { KnowledgeGraphService } from './knowledgeGraph';
+import { KnowledgeGraph } from './knowledgeGraph';
 import { QuantumThinkingService } from './quantum';
 
 export class PrivateJournalServer {
   private server: Server;
   private journalManager: JournalManager;
   private searchService: SearchService;
-  private knowledgeGraphService: KnowledgeGraphService;
+  private knowledgeGraphService: KnowledgeGraph;
   private quantumThinkingService: QuantumThinkingService;
   private config: AixConfig;
 

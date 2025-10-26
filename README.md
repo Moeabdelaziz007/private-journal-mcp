@@ -1,71 +1,76 @@
-# Jules' Private Journal CLI
+# Jules' Private Journal & Advanced Thinking Tool
 
-A command-line tool for maintaining a private, searchable journal. This tool is designed to help Jules, a software engineer, keep track of thoughts, feelings, and technical insights in a secure and local manner.
+This project provides a sophisticated tool for Jules, a software engineer, to maintain a private, searchable journal and utilize advanced thinking models. It operates in two modes: a command-line interface (CLI) for quick interactions, and a Model Context Protocol (MCP) server for deep integration with AI assistants.
 
 ## Features
 
+- **Dual Mode**: Run as a CLI or an MCP server.
+- **AIX Configuration**: All settings are managed through a `jules.aix` file.
 - **Local-First**: All data is stored locally on your machine.
 - **Semantic Search**: Find entries using natural language queries.
-- **Organized**: Separate sections for different types of thoughts.
-- **CLI-Based**: A simple and powerful command-line interface.
+- **Knowledge Graph**: Automatically builds a knowledge graph from your journal entries to reveal hidden connections.
+- **Quantum-Inspired Thinking**: Tools to explore multiple solutions (superposition) and find non-obvious conceptual links (entanglement).
 
-## Installation
+## Configuration (`jules.aix`)
 
-This tool is run directly from the project directory.
+The behavior of the tool is controlled by `jules.aix`. Here you can define Jules' persona, journal paths, and enabled tools.
+
+```yaml
+meta:
+  version: "1.0"
+  id: "jules-001"
+  name: "Jules Private Journal"
+  author: "Jules"
+
+persona:
+  role: "An extremely skilled software engineer"
+  tone: "thoughtful and articulate"
+  instructions: "Assist users by completing coding tasks, such as solving bugs, implementing features, and writing tests."
+
+settings:
+  project_journal_path: ".private-journal"
+  user_journal_path: "~/.private-journal"
+
+tools:
+  - name: "process_thoughts"
+    enabled: true
+  # ... and so on
+```
 
 ## Usage
 
-### Add a New Entry
+### CLI Mode
+
+Run with `--mode cli` (or no mode, as it's the default).
 
 ```bash
-node dist/index.js add [options]
+node dist/index.js --mode cli <command> [options]
 ```
 
-**Options:**
+**Commands:**
 
-- `--feelings <string>`: Your private feelings.
-- `--project_notes <string>`: Technical notes about the current project.
-- `--user_context <string>`: Notes about your human collaborator.
-- `--technical_insights <string>`: General software engineering insights.
-- `--world_knowledge <string>`: Interesting discoveries.
+- `add`: Add a new journal entry.
+- `search <query>`: Search your journal.
+- `read <path>`: Read a specific journal entry.
+- `list`: List recent journal entries.
 
-### Search Your Journal
+### MCP Server Mode
+
+Run with `--mode mcp`.
 
 ```bash
-node dist/index.js search <query> [options]
+node dist/index.js --mode mcp
 ```
 
-**Arguments:**
+**MCP Tools:**
 
-- `<query>`: Natural language search query.
-
-**Options:**
-
-- `--limit <number>`: Maximum number of results to return (default: 10).
-- `--type <string>`: Search scope (`project`, `user`, or `both`; default: `both`).
-- `--sections <array>`: Filter by section types.
-
-### Read an Entry
-
-```bash
-node dist/index.js read <path>
-```
-
-**Arguments:**
-
-- `<path>`: File path to the journal entry.
-
-### List Recent Entries
-
-```bash
-node dist/index.js list [options]
-```
-
-**Options:**
-
-- `--limit <number>`: Maximum number of entries to return (default: 10).
-- `--type <string>`: List scope (`project`, `user`, or `both`; default: `both`).
-- `--days <number>`: Number of days back to search (default: 30).
+- `process_thoughts`: Add a new journal entry.
+- `search_journal`: Search your journal.
+- `read_journal_entry`: Read a specific journal entry.
+- `list_recent_entries`: List recent journal entries.
+- `analyze_knowledge_topology`: Analyze the knowledge graph.
+- `explore_solutions`: Explore multiple solutions for a problem.
+- `find_entangled_concepts`: Find non-obvious connections to a concept.
 
 ## Development
 

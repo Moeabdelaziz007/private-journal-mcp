@@ -5,6 +5,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { EmbeddingService, EmbeddingData } from './embeddings';
 import { resolveUserJournalPath, resolveProjectJournalPath } from './paths';
+import { AixConfig } from './config';
 
 export interface SearchResult {
   path: string;
@@ -32,10 +33,10 @@ export class SearchService {
   private projectPath: string;
   private userPath: string;
 
-  constructor(projectPath?: string, userPath?: string) {
+  constructor(config: AixConfig, homedirOverride?: string) {
     this.embeddingService = EmbeddingService.getInstance();
-    this.projectPath = projectPath || resolveProjectJournalPath();
-    this.userPath = userPath || resolveUserJournalPath();
+    this.projectPath = resolveProjectJournalPath(config);
+    this.userPath = resolveUserJournalPath(config, homedirOverride);
   }
 
   async search(query: string, options: SearchOptions = {}): Promise<SearchResult[]> {

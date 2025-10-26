@@ -6,6 +6,28 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
 import { JournalManager } from '../src/journal';
+import { AixConfig } from '../src/config';
+import { KnowledgeGraphService } from '../src/knowledgeGraph';
+
+// Mock config for testing
+const mockConfig: AixConfig = {
+  meta: {
+    version: "1.0",
+    id: "jules-001",
+    name: "Jules Private Journal",
+    author: "Jules",
+  },
+  persona: {
+    role: "An extremely skilled software engineer",
+    tone: "thoughtful and articulate",
+    instructions: "Assist users by completing coding tasks, such as solving bugs, implementing features, and writing tests.",
+  },
+  settings: {
+    project_journal_path: ".private-journal",
+    user_journal_path: "~/.private-journal",
+  },
+  tools: [],
+};
 
 function getFormattedDate(date: Date): string {
   const year = date.getFullYear();
@@ -18,27 +40,18 @@ describe('JournalManager', () => {
   let projectTempDir: string;
   let userTempDir: string;
   let journalManager: JournalManager;
-  let originalHome: string | undefined;
+  let knowledgeGraphService: KnowledgeGraphService;
 
   beforeEach(async () => {
     projectTempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'journal-project-test-'));
     userTempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'journal-user-test-'));
     
-    // Mock HOME environment
-    originalHome = process.env.HOME;
-    process.env.HOME = userTempDir;
-    
-    journalManager = new JournalManager(projectTempDir);
+    const config = { ...mockConfig, settings: { project_journal_path: projectTempDir, user_journal_path: path.join(userTempDir, '.private-journal') } };
+    knowledgeGraphService = new KnowledgeGraphService();
+    journalManager = new JournalManager(config, knowledgeGraphService, userTempDir);
   });
 
   afterEach(async () => {
-    // Restore original HOME
-    if (originalHome !== undefined) {
-      process.env.HOME = originalHome;
-    } else {
-      delete process.env.HOME;
-    }
-    
     await fs.rm(projectTempDir, { recursive: true, force: true });
     await fs.rm(userTempDir, { recursive: true, force: true });
   });
@@ -133,7 +146,6 @@ describe('JournalManager', () => {
     const dayDir = path.join(projectTempDir, dateString);
     const files = await fs.readdir(dayDir);
     
-    // Check for .md file
     const mdFile = files.find(f => f.endsWith('.md'));
     expect(mdFile).toBeDefined();
 
@@ -156,7 +168,8 @@ describe('JournalManager', () => {
     const dateString = getFormattedDate(today);
     const dayDir = path.join(projectTempDir, dateString);
     const files = await fs.readdir(dayDir);
-    const filePath = path.join(dayDir, files[0]);
+    const mdFile = files.find(f => f.endsWith('.md'));
+    const filePath = path.join(dayDir, mdFile!);
     
     const fileContent = await fs.readFile(filePath, 'utf8');
     expect(fileContent).toContain(content);
@@ -298,28 +311,5 @@ describe('JournalManager', () => {
     // User directory should not exist
     const userDayDir = path.join(userTempDir, '.private-journal', dateString);
     await expect(fs.access(userDayDir)).rejects.toThrow();
-  });
-
-  test('uses explicit user journal path when provided', async () => {
-    const customUserDir = await fs.mkdtemp(path.join(os.tmpdir(), 'custom-user-'));
-    const customJournalManager = new JournalManager(projectTempDir, customUserDir);
-    
-    try {
-      const thoughts = { feelings: 'Testing custom path' };
-      await customJournalManager.writeThoughts(thoughts);
-
-      const today = new Date();
-      const dateString = getFormattedDate(today);
-      const customDayDir = path.join(customUserDir, dateString);
-      
-      const customFiles = await fs.readdir(customDayDir);
-      const mdFile = customFiles.find(f => f.endsWith('.md'));
-      expect(mdFile).toBeDefined();
-      
-      const customContent = await fs.readFile(path.join(customDayDir, mdFile!), 'utf8');
-      expect(customContent).toContain('Testing custom path');
-    } finally {
-      await fs.rm(customUserDir, { recursive: true, force: true });
-    }
   });
 });

@@ -8,34 +8,47 @@ import * as os from 'os';
 import { EmbeddingService } from '../src/embeddings';
 import { SearchService } from '../src/search';
 import { JournalManager } from '../src/journal';
+import { AixConfig } from '../src/config';
+import { KnowledgeGraphService } from '../src/knowledgeGraph';
+
+// Mock config for testing
+const mockConfig: AixConfig = {
+  meta: {
+    version: "1.0",
+    id: "jules-001",
+    name: "Jules Private Journal",
+    author: "Jules",
+  },
+  persona: {
+    role: "An extremely skilled software engineer",
+    tone: "thoughtful and articulate",
+    instructions: "Assist users by completing coding tasks, such as solving bugs, implementing features, and writing tests.",
+  },
+  settings: {
+    project_journal_path: ".private-journal",
+    user_journal_path: "~/.private-journal",
+  },
+  tools: [],
+};
 
 describe('Embedding and Search functionality', () => {
   let projectTempDir: string;
   let userTempDir: string;
   let journalManager: JournalManager;
   let searchService: SearchService;
-  let originalHome: string | undefined;
+  let knowledgeGraphService: KnowledgeGraphService;
 
   beforeEach(async () => {
     projectTempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'journal-project-test-'));
     userTempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'journal-user-test-'));
     
-    // Mock HOME environment
-    originalHome = process.env.HOME;
-    process.env.HOME = userTempDir;
-    
-    journalManager = new JournalManager(projectTempDir);
-    searchService = new SearchService(projectTempDir, path.join(userTempDir, '.private-journal'));
+    const config = { ...mockConfig, settings: { project_journal_path: projectTempDir, user_journal_path: path.join(userTempDir, '.private-journal') } };
+    knowledgeGraphService = new KnowledgeGraphService();
+    journalManager = new JournalManager(config, knowledgeGraphService, userTempDir);
+    searchService = new SearchService(config, userTempDir);
   });
 
   afterEach(async () => {
-    // Restore original HOME
-    if (originalHome !== undefined) {
-      process.env.HOME = originalHome;
-    } else {
-      delete process.env.HOME;
-    }
-    
     await fs.rm(projectTempDir, { recursive: true, force: true });
     await fs.rm(userTempDir, { recursive: true, force: true });
   });

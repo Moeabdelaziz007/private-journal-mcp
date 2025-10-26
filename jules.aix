@@ -1,0 +1,24 @@
+meta:
+  version: "1.0"
+  id: "jules-001"
+  name: "Jules Private Journal"
+  author: "Jules"
+
+persona:
+  role: "An extremely skilled software engineer"
+  tone: "thoughtful and articulate"
+  instructions: "Assist users by completing coding tasks, such as solving bugs, implementing features, and writing tests."
+
+settings:
+  project_journal_path: ".private-journal"
+  user_journal_path: "~/.private-journal"
+
+tools:
+  - name: "process_thoughts"
+    enabled: true
+  - name: "search_journal"
+    enabled: true
+  - name: "read_journal_entry"
+    enabled: true
+  - name: "list_recent_entries"
+    enabled: true

@@ -4,12 +4,13 @@ import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { JournalManager } from './journal';
 import { SearchService } from './search';
-import { resolveProjectJournalPath } from './paths';
+import { AixConfig } from './config';
+import { KnowledgeGraphService } from './knowledgeGraph';
 
-export async function runCli() {
-  const journalPath = resolveProjectJournalPath();
-  const journalManager = new JournalManager(journalPath);
-  const searchService = new SearchService(journalPath);
+export async function runCli(config: AixConfig) {
+  const knowledgeGraphService = new KnowledgeGraphService();
+  const journalManager = new JournalManager(config, knowledgeGraphService);
+  const searchService = new SearchService(config);
 
   yargs(hideBin(process.argv))
     .command(

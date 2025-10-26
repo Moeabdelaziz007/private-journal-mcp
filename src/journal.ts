@@ -4,18 +4,22 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { JournalEntry } from './types';
-import { resolveUserJournalPath } from './paths';
+import { resolveUserJournalPath, resolveProjectJournalPath } from './paths';
 import { EmbeddingService, EmbeddingData } from './embeddings';
+import { AixConfig } from './config';
+import { KnowledgeGraphService } from './knowledgeGraph';
 
 export class JournalManager {
   private projectJournalPath: string;
   private userJournalPath: string;
   private embeddingService: EmbeddingService;
+  private knowledgeGraphService: KnowledgeGraphService;
 
-  constructor(projectJournalPath: string, userJournalPath?: string) {
-    this.projectJournalPath = projectJournalPath;
-    this.userJournalPath = userJournalPath || resolveUserJournalPath();
+  constructor(config: AixConfig, knowledgeGraphService: KnowledgeGraphService, homedirOverride?: string) {
+    this.projectJournalPath = resolveProjectJournalPath(config);
+    this.userJournalPath = resolveUserJournalPath(config, homedirOverride);
     this.embeddingService = EmbeddingService.getInstance();
+    this.knowledgeGraphService = knowledgeGraphService;
   }
 
   async writeEntry(content: string): Promise<void> {
@@ -34,6 +38,9 @@ export class JournalManager {
 
     // Generate and save embedding
     await this.generateEmbeddingForEntry(filePath, formattedEntry, timestamp);
+
+    // Analyze and update knowledge graph
+    this.knowledgeGraphService.analyzeEntry(content);
   }
 
   async writeThoughts(thoughts: {
@@ -129,6 +136,10 @@ ${content}
 
     // Generate and save embedding
     await this.generateEmbeddingForEntry(filePath, formattedEntry, timestamp);
+
+    // Analyze and update knowledge graph
+    const content = Object.values(thoughts).filter(Boolean).join('\n\n');
+    this.knowledgeGraphService.analyzeEntry(content);
   }
 
   private formatThoughts(thoughts: {

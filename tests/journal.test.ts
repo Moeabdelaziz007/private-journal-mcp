@@ -40,15 +40,15 @@ describe('JournalManager', () => {
   let projectTempDir: string;
   let userTempDir: string;
   let journalManager: JournalManager;
-  let knowledgeGraphService: KnowledgeGraph;
+  let knowledgeGraph: KnowledgeGraph;
 
   beforeEach(async () => {
     projectTempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'journal-project-test-'));
     userTempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'journal-user-test-'));
     
     const config = { ...mockConfig, settings: { project_journal_path: projectTempDir, user_journal_path: path.join(userTempDir, '.private-journal') } };
-    knowledgeGraphService = new KnowledgeGraph();
-    journalManager = new JournalManager(config, knowledgeGraphService, userTempDir);
+    knowledgeGraph = new KnowledgeGraph();
+    journalManager = new JournalManager(config, knowledgeGraph, userTempDir);
   });
 
   afterEach(async () => {
@@ -106,5 +106,27 @@ describe('JournalManager', () => {
     
     const projectDayDir = path.join(projectTempDir, dateString);
     await expect(fs.access(projectDayDir)).rejects.toThrow();
+  });
+
+  test('splits thoughts between project and user directories', async () => {
+    const thoughts = {
+      feelings: 'I feel great',
+      project_notes: 'The architecture is solid',
+    };
+
+    await journalManager.writeThoughts(thoughts);
+
+    const today = new Date();
+    const dateString = getFormattedDate(today);
+
+    // Check project directory
+    const projectDayDir = path.join(projectTempDir, dateString);
+    const projectFiles = await fs.readdir(projectDayDir);
+    expect(projectFiles.length).toBeGreaterThan(0);
+
+    // Check user directory
+    const userDayDir = path.join(userTempDir, '.private-journal', dateString);
+    const userFiles = await fs.readdir(userDayDir);
+    expect(userFiles.length).toBeGreaterThan(0);
   });
 });

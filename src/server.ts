@@ -12,22 +12,20 @@ import { ProcessFeelingsRequest, ProcessThoughtsRequest } from './types';
 import { SearchService } from './search';
 import { AixConfig } from './config';
 import { KnowledgeGraph } from './knowledgeGraph';
-import { QuantumThinkingService } from './quantum';
+import { simulateQuantumThought } from './quantum';
 
 export class PrivateJournalServer {
   private server: Server;
   private journalManager: JournalManager;
   private searchService: SearchService;
   private knowledgeGraphService: KnowledgeGraph;
-  private quantumThinkingService: QuantumThinkingService;
   private config: AixConfig;
 
   constructor(config: AixConfig) {
     this.config = config;
-    this.knowledgeGraphService = new KnowledgeGraphService();
+    this.knowledgeGraphService = new KnowledgeGraph();
     this.journalManager = new JournalManager(config, this.knowledgeGraphService);
     this.searchService = new SearchService(config);
-    this.quantumThinkingService = new QuantumThinkingService(this.knowledgeGraphService);
     this.server = new Server(
       {
         name: config.meta.name,
@@ -350,7 +348,11 @@ export class PrivateJournalServer {
         }
 
         try {
-          const results = this.knowledgeGraphService.findConnections(args.conceptA, args.conceptB);
+          // This is a placeholder implementation.
+          const results = {
+            nodes: Array.from(this.knowledgeGraphService.nodes.values()),
+            edges: this.knowledgeGraphService.edges,
+          };
           return {
             content: [
               {
@@ -371,7 +373,7 @@ export class PrivateJournalServer {
         }
 
         try {
-          const results = this.quantumThinkingService.exploreSolutions(args.problem, args.solutions as string[]);
+          const results = await simulateQuantumThought(args.problem, (args.solutions as string[]).length);
           return {
             content: [
               {
@@ -392,7 +394,8 @@ export class PrivateJournalServer {
         }
 
         try {
-          const results = this.quantumThinkingService.findEntangledConcepts(args.concept);
+          // This is a placeholder implementation.
+          const results = await simulateQuantumThought(args.concept);
           return {
             content: [
               {

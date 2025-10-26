@@ -2,7 +2,9 @@ node_modules/
 dist/
 coverage/
 *.log
+*.err
 .env
 .DS_Store
 .vscode/
 .idea/
+.private-journal/

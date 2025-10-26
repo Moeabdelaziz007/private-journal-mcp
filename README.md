@@ -1,120 +1,71 @@
-# Private Journal MCP Server
+# Jules' Private Journal CLI
 
-A comprehensive MCP (Model Context Protocol) server that provides Claude with private journaling and semantic search capabilities for processing thoughts, feelings, and insights.
+A command-line tool for maintaining a private, searchable journal. This tool is designed to help Jules, a software engineer, keep track of thoughts, feelings, and technical insights in a secure and local manner.
 
 ## Features
 
-### Journaling
-- **Multi-section journaling**: Separate categories for feelings, project notes, user context, technical insights, and world knowledge
-- **Dual storage**: Project notes stay with projects, personal thoughts in user home directory
-- **Timestamped entries**: Each entry automatically dated with microsecond precision
-- **YAML frontmatter**: Structured metadata for each entry
-
-### Search & Discovery
-- **Semantic search**: Natural language queries using local AI embeddings
-- **Vector similarity**: Find conceptually related entries, not just keyword matches
-- **Local AI processing**: Uses @xenova/transformers - no external API calls required
-- **Automatic indexing**: Embeddings generated for all entries on startup and ongoing
-
-### Privacy & Performance
-- **Completely private**: All processing happens locally, no data leaves your machine
-- **Fast operation**: Optimized file structure and in-memory similarity calculations
-- **Robust fallbacks**: Intelligent path resolution across platforms
+- **Local-First**: All data is stored locally on your machine.
+- **Semantic Search**: Find entries using natural language queries.
+- **Organized**: Separate sections for different types of thoughts.
+- **CLI-Based**: A simple and powerful command-line interface.
 
 ## Installation
 
-This server is run directly from GitHub using `npx` - no installation required.
+This tool is run directly from the project directory.
 
-## MCP Configuration
+## Usage
 
-#### Claude Code (One-liner)
+### Add a New Entry
+
 ```bash
-claude mcp add-json private-journal '{"type":"stdio","command":"npx","args":["github:obra/private-journal-mcp"]}' -s user
+node dist/index.js add [options]
 ```
 
-#### Manual Configuration
-Add to your MCP settings (e.g., Claude Desktop configuration):
+**Options:**
 
-```json
-{
-  "mcpServers": {
-    "private-journal": {
-      "command": "npx",
-      "args": ["github:obra/private-journal-mcp"]
-    }
-  }
-}
+- `--feelings <string>`: Your private feelings.
+- `--project_notes <string>`: Technical notes about the current project.
+- `--user_context <string>`: Notes about your human collaborator.
+- `--technical_insights <string>`: General software engineering insights.
+- `--world_knowledge <string>`: Interesting discoveries.
+
+### Search Your Journal
+
+```bash
+node dist/index.js search <query> [options]
 ```
 
-The server will automatically find a suitable location for the journal files.
+**Arguments:**
 
-## MCP Tools
+- `<query>`: Natural language search query.
 
-The server provides comprehensive journaling and search capabilities:
+**Options:**
 
-### `process_thoughts`
-Multi-section private journaling with these optional categories:
-- **feelings**: Private emotional processing space
-- **project_notes**: Technical insights specific to current project  
-- **user_context**: Notes about collaborating with humans
-- **technical_insights**: General software engineering learnings
-- **world_knowledge**: Domain knowledge and interesting discoveries
+- `--limit <number>`: Maximum number of results to return (default: 10).
+- `--type <string>`: Search scope (`project`, `user`, or `both`; default: `both`).
+- `--sections <array>`: Filter by section types.
 
-### `search_journal`
-Semantic search across all journal entries:
-- **query** (required): Natural language search query
-- **limit**: Maximum results (default: 10)
-- **type**: Search scope - 'project', 'user', or 'both' (default: 'both')
-- **sections**: Filter by specific categories
+### Read an Entry
 
-### `read_journal_entry`
-Read full content of specific entries:
-- **path** (required): File path from search results
-
-### `list_recent_entries`
-Browse recent entries chronologically:
-- **limit**: Maximum entries (default: 10)
-- **type**: Entry scope - 'project', 'user', or 'both' (default: 'both')
-- **days**: Days back to search (default: 30)
-
-## File Structure
-
-### Project Journal (per project)
-```
-.private-journal/
-├── 2025-05-31/
-│   ├── 14-30-45-123456.md          # Project notes entry
-│   ├── 14-30-45-123456.embedding   # Search index
-│   └── ...
+```bash
+node dist/index.js read <path>
 ```
 
-### User Journal (global)
+**Arguments:**
+
+- `<path>`: File path to the journal entry.
+
+### List Recent Entries
+
+```bash
+node dist/index.js list [options]
 ```
-~/.private-journal/
-├── 2025-05-31/
-│   ├── 14-32-15-789012.md          # Personal thoughts entry
-│   ├── 14-32-15-789012.embedding   # Search index
-│   └── ...
-```
 
-### Entry Format
-Each markdown file contains YAML frontmatter and structured sections:
+**Options:**
 
-```markdown
----
-title: "2:30:45 PM - May 31, 2025"
-date: 2025-05-31T14:30:45.123Z
-timestamp: 1717160645123
----
-
-## Feelings
-
-I'm excited about this new search feature...
-
-## Technical Insights
-
-Vector embeddings provide semantic understanding...
-```
+- `--limit <number>`: Maximum number of entries to return (default: 10).
+- `--type <string>`: List scope (`project`, `user`, or `both`; default: `both`).
+- `--days <number>`: Number of days back to search (default: 30).
 
 ## Development
 
@@ -129,35 +80,3 @@ npm run build
 ```bash
 npm test
 ```
-
-### Development Mode
-
-```bash
-npm run dev
-```
-
-### Improving Claude's Performance
-
-To help Claude learn and improve over time, consider adding journal usage guidance to your `~/.claude/CLAUDE.md` file:
-
-```markdown
-## Learning and Memory Management
-
-- YOU MUST use the journal tool frequently to capture technical insights, failed approaches, and user preferences
-- Before starting complex tasks, search the journal for relevant past experiences and lessons learned
-- Document architectural decisions and their outcomes for future reference
-- Track patterns in user feedback to improve collaboration over time
-- When you notice something that should be fixed but is unrelated to your current task, document it in your journal rather than fixing it immediately
-```
-
-This enables Claude to build persistent memory across conversations, leading to better engineering decisions and collaboration patterns.
-
-## Author
-
-Jesse Vincent <jesse@fsck.com>
-
-Read more about the motivation and design in the [blog post](https://blog.fsck.com/2025/05/28/dear-diary-the-user-asked-me-if-im-alive/).
-
-## License
-
-MIT

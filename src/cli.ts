@@ -8,7 +8,7 @@ import { VectorStoreService, EmbeddingProvider } from './vectorStore';
 import { resolveProjectJournalPath } from './paths';
 
 export async function runCli() {
-  const argv = await yargs(hideBin(process.argv))
+  const cli = yargs(hideBin(process.argv))
     .option('embedding-provider', {
       type: 'string',
       choices: ['local', 'openai', 'gemini'],
@@ -21,9 +21,11 @@ export async function runCli() {
       default: true,
       description: 'Use vector database for storage and search',
       global: true
-    })
-    .parse();
+    });
 
+  // Parse args early to get configuration
+  const argv = await cli.argv;
+  
   // Initialize vector store with chosen provider
   const embeddingProvider = argv['embedding-provider'] as EmbeddingProvider;
   const useVectorStore = argv['use-vector-store'] as boolean;
@@ -36,20 +38,7 @@ export async function runCli() {
   const journalManager = new JournalManager(journalPath, undefined, useVectorStore);
   const searchService = new SearchService(journalPath, undefined, useVectorStore);
 
-  yargs(hideBin(process.argv))
-    .option('embedding-provider', {
-      type: 'string',
-      choices: ['local', 'openai', 'gemini'],
-      default: 'local',
-      description: 'Embedding provider to use',
-      global: true
-    })
-    .option('use-vector-store', {
-      type: 'boolean',
-      default: true,
-      description: 'Use vector database',
-      global: true
-    })
+  cli
     .command(
       'add',
       'Add a new journal entry',

@@ -91,6 +91,7 @@ export class VectorStoreService {
 
   private async doInitialize(): Promise<void> {
     try {
+      // Note: Using console.error to stderr for logging to avoid interfering with CLI output
       console.error('Initializing vector store...');
       
       // Initialize embedding service if using local embeddings

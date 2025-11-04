@@ -24,8 +24,9 @@ describe('Embedding and Search functionality', () => {
     originalHome = process.env.HOME;
     process.env.HOME = userTempDir;
     
-    journalManager = new JournalManager(projectTempDir);
-    searchService = new SearchService(projectTempDir, path.join(userTempDir, '.private-journal'));
+    // Disable vector store for tests
+    journalManager = new JournalManager(projectTempDir, undefined, false);
+    searchService = new SearchService(projectTempDir, path.join(userTempDir, '.private-journal'), false);
   });
 
   afterEach(async () => {

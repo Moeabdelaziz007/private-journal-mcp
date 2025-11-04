@@ -28,7 +28,8 @@ describe('JournalManager', () => {
     originalHome = process.env.HOME;
     process.env.HOME = userTempDir;
     
-    journalManager = new JournalManager(projectTempDir);
+    // Disable vector store for tests to avoid needing Chroma server
+    journalManager = new JournalManager(projectTempDir, undefined, false);
   });
 
   afterEach(async () => {
@@ -302,7 +303,7 @@ describe('JournalManager', () => {
 
   test('uses explicit user journal path when provided', async () => {
     const customUserDir = await fs.mkdtemp(path.join(os.tmpdir(), 'custom-user-'));
-    const customJournalManager = new JournalManager(projectTempDir, customUserDir);
+    const customJournalManager = new JournalManager(projectTempDir, customUserDir, false);
     
     try {
       const thoughts = { feelings: 'Testing custom path' };

@@ -4,14 +4,52 @@ import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { JournalManager } from './journal';
 import { SearchService } from './search';
+import { VectorStoreService, EmbeddingProvider } from './vectorStore';
 import { resolveProjectJournalPath } from './paths';
 
 export async function runCli() {
+  const argv = await yargs(hideBin(process.argv))
+    .option('embedding-provider', {
+      type: 'string',
+      choices: ['local', 'openai', 'gemini'],
+      default: 'local',
+      description: 'Embedding provider to use (local, openai, or gemini)',
+      global: true
+    })
+    .option('use-vector-store', {
+      type: 'boolean',
+      default: true,
+      description: 'Use vector database for storage and search',
+      global: true
+    })
+    .parse();
+
+  // Initialize vector store with chosen provider
+  const embeddingProvider = argv['embedding-provider'] as EmbeddingProvider;
+  const useVectorStore = argv['use-vector-store'] as boolean;
+  
+  VectorStoreService.getInstance({
+    embeddingProvider
+  });
+
   const journalPath = resolveProjectJournalPath();
-  const journalManager = new JournalManager(journalPath);
-  const searchService = new SearchService(journalPath);
+  const journalManager = new JournalManager(journalPath, undefined, useVectorStore);
+  const searchService = new SearchService(journalPath, undefined, useVectorStore);
 
   yargs(hideBin(process.argv))
+    .option('embedding-provider', {
+      type: 'string',
+      choices: ['local', 'openai', 'gemini'],
+      default: 'local',
+      description: 'Embedding provider to use',
+      global: true
+    })
+    .option('use-vector-store', {
+      type: 'boolean',
+      default: true,
+      description: 'Use vector database',
+      global: true
+    })
     .command(
       'add',
       'Add a new journal entry',

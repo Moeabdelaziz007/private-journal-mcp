@@ -6,16 +6,21 @@ import * as path from 'path';
 import { JournalEntry } from './types';
 import { resolveUserJournalPath } from './paths';
 import { EmbeddingService, EmbeddingData } from './embeddings';
+import { VectorStoreService, DocumentMetadata } from './vectorStore';
 
 export class JournalManager {
   private projectJournalPath: string;
   private userJournalPath: string;
   private embeddingService: EmbeddingService;
+  private vectorStore: VectorStoreService;
+  private useVectorStore: boolean;
 
-  constructor(projectJournalPath: string, userJournalPath?: string) {
+  constructor(projectJournalPath: string, userJournalPath?: string, useVectorStore: boolean = true) {
     this.projectJournalPath = projectJournalPath;
     this.userJournalPath = userJournalPath || resolveUserJournalPath();
     this.embeddingService = EmbeddingService.getInstance();
+    this.useVectorStore = useVectorStore;
+    this.vectorStore = VectorStoreService.getInstance();
   }
 
   async writeEntry(content: string): Promise<void> {
@@ -33,7 +38,7 @@ export class JournalManager {
     await fs.writeFile(filePath, formattedEntry, 'utf8');
 
     // Generate and save embedding
-    await this.generateEmbeddingForEntry(filePath, formattedEntry, timestamp);
+    await this.generateEmbeddingForEntry(filePath, formattedEntry, timestamp, 'project');
   }
 
   async writeThoughts(thoughts: {
@@ -127,8 +132,11 @@ ${content}
     const formattedEntry = this.formatThoughts(thoughts, timestamp);
     await fs.writeFile(filePath, formattedEntry, 'utf8');
 
+    // Determine entry type based on path
+    const entryType = basePath === this.projectJournalPath ? 'project' : 'user';
+    
     // Generate and save embedding
-    await this.generateEmbeddingForEntry(filePath, formattedEntry, timestamp);
+    await this.generateEmbeddingForEntry(filePath, formattedEntry, timestamp, entryType);
   }
 
   private formatThoughts(thoughts: {
@@ -185,7 +193,8 @@ ${sections.join('\n\n')}
   private async generateEmbeddingForEntry(
     filePath: string,
     content: string,
-    timestamp: Date
+    timestamp: Date,
+    entryType: 'project' | 'user' = 'project'
   ): Promise<void> {
     try {
       const { text, sections } = this.embeddingService.extractSearchableText(content);
@@ -205,6 +214,19 @@ ${sections.join('\n\n')}
       };
 
       await this.embeddingService.saveEmbedding(filePath, embeddingData);
+
+      // Also add to vector store if enabled
+      if (this.useVectorStore) {
+        const id = `${entryType}_${timestamp.getTime()}_${path.basename(filePath, '.md')}`;
+        const metadata: DocumentMetadata = {
+          text,
+          sections,
+          timestamp: timestamp.getTime(),
+          path: filePath,
+          type: entryType
+        };
+        await this.vectorStore.addEntry(id, text, metadata);
+      }
     } catch (error) {
       console.error(`Failed to generate embedding for ${filePath}:`, error);
       // Don't throw - embedding failure shouldn't prevent journal writing
@@ -242,7 +264,8 @@ ${sections.join('\n\n')}
               console.error(`Generating missing embedding for ${mdPath}`);
               const content = await fs.readFile(mdPath, 'utf8');
               const timestamp = this.extractTimestampFromPath(mdPath) || new Date();
-              await this.generateEmbeddingForEntry(mdPath, content, timestamp);
+              const entryType = basePath === this.projectJournalPath ? 'project' : 'user';
+              await this.generateEmbeddingForEntry(mdPath, content, timestamp, entryType);
               count++;
             }
           }

@@ -4,6 +4,7 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { EmbeddingService, EmbeddingData } from './embeddings';
+import { VectorStoreService } from './vectorStore';
 import { resolveUserJournalPath, resolveProjectJournalPath } from './paths';
 
 export interface SearchResult {
@@ -29,16 +30,59 @@ export interface SearchOptions {
 
 export class SearchService {
   private embeddingService: EmbeddingService;
+  private vectorStore: VectorStoreService;
   private projectPath: string;
   private userPath: string;
+  private useVectorStore: boolean;
 
-  constructor(projectPath?: string, userPath?: string) {
+  constructor(projectPath?: string, userPath?: string, useVectorStore: boolean = true) {
     this.embeddingService = EmbeddingService.getInstance();
+    this.vectorStore = VectorStoreService.getInstance();
     this.projectPath = projectPath || resolveProjectJournalPath();
     this.userPath = userPath || resolveUserJournalPath();
+    this.useVectorStore = useVectorStore;
   }
 
   async search(query: string, options: SearchOptions = {}): Promise<SearchResult[]> {
+    // Use vector store if enabled
+    if (this.useVectorStore) {
+      return this.searchWithVectorStore(query, options);
+    }
+    
+    // Fallback to original file-based search
+    return this.searchWithFiles(query, options);
+  }
+
+  private async searchWithVectorStore(query: string, options: SearchOptions = {}): Promise<SearchResult[]> {
+    const {
+      limit = 10,
+      minScore = 0.1,
+      sections,
+      dateRange,
+      type = 'both'
+    } = options;
+
+    const results = await this.vectorStore.search(query, {
+      type,
+      limit,
+      sections,
+      dateRange
+    });
+
+    return results
+      .filter(result => result.score >= minScore)
+      .map(result => ({
+        path: result.path,
+        score: result.score,
+        text: result.text,
+        sections: result.sections,
+        timestamp: result.timestamp,
+        excerpt: this.generateExcerpt(result.text, query),
+        type: result.type
+      }));
+  }
+
+  private async searchWithFiles(query: string, options: SearchOptions = {}): Promise<SearchResult[]> {
     const {
       limit = 10,
       minScore = 0.1,
@@ -109,6 +153,40 @@ export class SearchService {
   }
 
   async listRecent(options: SearchOptions = {}): Promise<SearchResult[]> {
+    // Use vector store if enabled
+    if (this.useVectorStore) {
+      return this.listRecentWithVectorStore(options);
+    }
+    
+    // Fallback to original file-based listing
+    return this.listRecentWithFiles(options);
+  }
+
+  private async listRecentWithVectorStore(options: SearchOptions = {}): Promise<SearchResult[]> {
+    const {
+      limit = 10,
+      type = 'both',
+      dateRange
+    } = options;
+
+    const results = await this.vectorStore.listRecent({
+      type,
+      limit,
+      dateRange
+    });
+
+    return results.map(result => ({
+      path: result.path,
+      score: 1,
+      text: result.text,
+      sections: result.sections,
+      timestamp: result.timestamp,
+      excerpt: this.generateExcerpt(result.text, '', 150),
+      type: result.type
+    }));
+  }
+
+  private async listRecentWithFiles(options: SearchOptions = {}): Promise<SearchResult[]> {
     const {
       limit = 10,
       type = 'both',
